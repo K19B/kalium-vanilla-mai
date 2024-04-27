@@ -1,8 +1,9 @@
 import axios from "axios";
 import https from "https";
+import { JSDOM } from 'jsdom';
 
 // Disable maimaidx.jp Cert Check
-const agent = new https.Agent({  
+const agent = new https.Agent({
     rejectUnauthorized: false
 });
 
@@ -27,7 +28,7 @@ const
     headerDNT = '1',
     headerUpgradeInsecureRequests = '1',
     // Chromium "Sec-Fetch" & "sec-ch-ua" Headers
-    headerSFDest = 'document', 
+    headerSFDest = 'document',
     headerSFMode = 'navigate',
     headerSFSite = 'same-origin',
     headerSFSiteNone = 'none',
@@ -38,8 +39,28 @@ const
     // UA
     headerUA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
 
+export class maiScore {
+    ranker: string
+    score: number
+    index: number
+    theoryCount: number
+    date: Date
+
+    constructor(r: string,
+        s: number,
+        i: number,
+        c: number,
+        d: Date) {
+        this.ranker = r;
+        this.score = s;
+        this.index = i;
+        this.theoryCount = c;
+        this.date = d;
+    }
+}
+
 function sleep(ms: number) {
-    return new Promise( resolve => setTimeout(resolve, ms) );
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 function buildToken() { // Cookie '_t'
@@ -47,8 +68,8 @@ function buildToken() { // Cookie '_t'
     let { createHash } = require('crypto');
     let date = new Date();
     let machineId = createHash('md5')
-                    .update(os.hostname() + os.totalmem() + os.homedir() + date.getUTCFullYear() + 'Kalium')
-                    .digest('hex');
+        .update(os.hostname() + os.totalmem() + os.homedir() + date.getUTCFullYear() + 'Kalium')
+        .digest('hex');
     return machineId;
 }
 
@@ -135,7 +156,7 @@ async function refreshIdJp(segaId: string, passwd: string) {
     return IdFin;
 }
 
-export async function maiRankJp(sid: string, segaId: string, passwd: string) {
+export async function maiRankJp(sid: string, segaId: string, passwd: string): Promise<maiScore[]> {
     // ReM only now
     let userId = await refreshIdJp(segaId, passwd);
     let rankPage = await axios({
@@ -164,24 +185,57 @@ export async function maiRankJp(sid: string, segaId: string, passwd: string) {
     }).catch(error => {
         console.error('Error:', error);
     }) as string;
-    let rank1n = rankPage.split('\n')[225].trim();
-    let rank1d = rankPage.split('\n')[227].match(/.*f_r t_c">([^<]*)<\/div>.*/)![1];
-    let rank1l = rankPage.split('\n')[228].match(/.*<div class="p_15 p_r_10 p_b_0 f_r t_r f_16 f_b">([^<]*)<\/div>.*/)![1];
-    let rank2n = rankPage.split('\n')[238].trim();
-    let rank2d = rankPage.split('\n')[240].match(/.*f_r t_c">([^<]*)<\/div>.*/)![1];
-    let rank2l = rankPage.split('\n')[241].match(/.*<div class="p_15 p_r_10 p_b_0 f_r t_r f_16 f_b">([^<]*)<\/div>.*/)![1];
-    let rank3n = rankPage.split('\n')[251].trim();
-    let rank3d = rankPage.split('\n')[253].match(/.*f_r t_c">([^<]*)<\/div>.*/)![1];
-    let rank3l = rankPage.split('\n')[254].match(/.*<div class="p_15 p_r_10 p_b_0 f_r t_r f_16 f_b">([^<]*)<\/div>.*/)![1];
-    let result =
-        '[1] ' + rank1n + '\n' +
-        rank1d + '\n' +
-        rank1l + '\n' +
-        '[2] ' + rank2n + '\n' +
-        rank2d + '\n' +
-        rank2l + '\n' +
-        '[3] ' + rank3n + '\n' +
-        rank3d + '\n' +
-        rank3l + '\n' ;
+    //let rank1n = rankPage.split('\n')[225].trim();
+    //let rank1d = rankPage.split('\n')[227].match(/.*f_r t_c">([^<]*)<\/div>.*/)![1];
+    //let rank1l = rankPage.split('\n')[228].match(/.*<div class="p_15 p_r_10 p_b_0 f_r t_r f_16 f_b">([^<]*)<\/div>.*/)![1];
+    //let rank2n = rankPage.split('\n')[238].trim();
+    //let rank2d = rankPage.split('\n')[240].match(/.*f_r t_c">([^<]*)<\/div>.*/)![1];
+    //let rank2l = rankPage.split('\n')[241].match(/.*<div class="p_15 p_r_10 p_b_0 f_r t_r f_16 f_b">([^<]*)<\/div>.*/)![1];
+    //let rank3n = rankPage.split('\n')[251].trim();
+    //let rank3d = rankPage.split('\n')[253].match(/.*f_r t_c">([^<]*)<\/div>.*/)![1];
+    //let rank3l = rankPage.split('\n')[254].match(/.*<div class="p_15 p_r_10 p_b_0 f_r t_r f_16 f_b">([^<]*)<\/div>.*/)![1];
+    //let result =
+    //    '[1] ' + rank1n + '\n' +
+    //    rank1d + '\n' +
+    //    rank1l + '\n' +
+    //    '[2] ' + rank2n + '\n' +
+    //    rank2d + '\n' +
+    //    rank2l + '\n' +
+    //    '[3] ' + rank3n + '\n' +
+    //    rank3d + '\n' +
+    //    rank3l + '\n';
+    return dxNetParser(rankPage);
+}
+
+// Html Parser
+function getElements(htmlContent: string, selector: string): string[] | undefined {
+    if (!htmlContent)
+        return undefined;
+
+    let dom = new JSDOM(htmlContent);
+    let doc = dom.window.document;
+    const elements = doc.querySelectorAll(selector);
+    return Array.from(elements).map(x => stringHandle(x.textContent ?? ""));
+}
+function stringHandle(s: string): string {
+    return s.replace(/[\uff01-\uff5e]/g,
+        c => String.fromCharCode(c.charCodeAt(0) - 0xfee0))
+        .replace(/\s/g, '');
+}
+function dxNetParser(html: string): maiScore[] {
+    let rankers: string[] = getElements(html, ".f_l.p_t_10.p_l_10.f_15") ?? [];
+    let scores: number[] = (getElements(html, ".p_15.p_r_10.p_b_0.f_r.t_r.f_16.f_b") ?? []).map(x => parseFloat(x));
+    let date: Date[] = (getElements(html, ".ranking_music_date.f_r.t_c") ?? []).map(x => new Date(x));
+    let tCount: number[] = (getElements(html, ".ranking_theory_count.t_r") ?? []).map(x => parseInt(x));
+
+    let result: maiScore[] = [];
+    let i: number = 0;
+    for (i = i; i < rankers.length; i++) {
+        result.push(new maiScore(rankers[i],
+            scores[i],
+            i,
+            tCount[i],
+            date[i]));
+    }
     return result;
 }
