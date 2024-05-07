@@ -17,21 +17,33 @@ export class maiScore {
         this.date = d;
     }
 }
+export enum musicDifficulty
+{
+    Basic,
+    Advanced,
+    Expert,
+    Master,
+    ReMaster,
+    Utage
+}
 export class musicScore
 {
     name: string
     level: string
+    difficulty: musicDifficulty
     score: number
     dxScore: number
 
     constructor(n: string,
                 l: string,
                 s: number,
-                d: number)
+                d: number,
+                diff: musicDifficulty)
     {
         this.name = n;
         this.level = l;
         this.score = s;
         this.dxScore = d;
+        this.difficulty = diff;
     }
 }

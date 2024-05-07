@@ -1,7 +1,7 @@
 import axios from "axios";
 import https from "https";
 import { JSDOM } from 'jsdom';
-import { musicScore, maiScore } from './class'
+import { musicScore, maiScore, musicDifficulty } from './class'
 
 // Disable maimaidx.jp Cert Check
 const agent = new https.Agent({
@@ -222,7 +222,8 @@ function dxNetParser(html: string): maiScore[] {
     }
     return result;
 }
-function getMusicScore(htmlData: string): musicScore[]
+// Get All Music Score
+function getMusicScore(htmlData: string, diff: musicDifficulty): musicScore[]
 {
     let names = getElements(htmlData, ".music_name_block.t_l.f_13.break") ?? [];
     let levels = getElements(htmlData,".music_lv_block.f_r.t_c.f_14") ?? [];
@@ -238,7 +239,8 @@ function getMusicScore(htmlData: string): musicScore[]
             names[i],
             levels[i],
             scores[i],
-            dxScores[i]
+            dxScores[i],
+            diff
         ))
     }
 
