@@ -1,6 +1,7 @@
 import axios from "axios";
 import https from "https";
 import { JSDOM } from 'jsdom';
+import { musicScore, maiScore } from './class'
 
 // Disable maimaidx.jp Cert Check
 const agent = new https.Agent({
@@ -39,25 +40,7 @@ const
     // UA
     headerUA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
 
-export class maiScore {
-    ranker: string
-    score: number
-    index: number
-    theoryCount: number
-    date: Date
 
-    constructor(r: string,
-        s: number,
-        i: number,
-        c: number,
-        d: Date) {
-        this.ranker = r;
-        this.score = s;
-        this.index = i;
-        this.theoryCount = c;
-        this.date = d;
-    }
-}
 
 function sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -238,4 +221,27 @@ function dxNetParser(html: string): maiScore[] {
             date[i]));
     }
     return result;
+}
+function getMusicScore(htmlData: string): musicScore[]
+{
+    let names = getElements(htmlData, ".music_name_block.t_l.f_13.break") ?? [];
+    let levels = getElements(htmlData,".music_lv_block.f_r.t_c.f_14") ?? [];
+    let scores = (getElements(htmlData,".music_score_block.w_112.t_r.f_l.f_12") ?? []).map(x => parseFloat(x));
+    let dxScores = (getElements(htmlData,".music_score_block.w_190.t_r.f_l.f_12") ?? []).map(x => parseInt(x));
+
+    let result: musicScore[] = [];
+    let i = 0;
+
+    for( i = i;i < names.length;i++)
+    {
+        result.push(new musicScore(
+            names[i],
+            levels[i],
+            scores[i],
+            dxScores[i]
+        ))
+    }
+
+    return result;
+
 }
