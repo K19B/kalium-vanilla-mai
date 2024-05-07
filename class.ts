@@ -17,17 +17,15 @@ export class maiScore {
         this.date = d;
     }
 }
-export enum musicDifficulty
-{
-    Basic,
-    Advanced,
-    Expert,
-    Master,
-    ReMaster,
-    Utage
+export enum musicDifficulty {
+    BASIC,
+    ADVANCED,
+    EXPERT,
+    MASTER,
+    ReMASTER,
+    UTAGE
 }
-export class musicScore
-{
+export class musicScore {
     name: string
     level: string
     difficulty: musicDifficulty

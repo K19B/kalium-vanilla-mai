@@ -233,8 +233,7 @@ function getMusicScore(htmlData: string, diff: musicDifficulty): musicScore[]
     let result: musicScore[] = [];
     let i = 0;
 
-    for( i = i;i < names.length;i++)
-    {
+    for( i = i;i < names.length;i++) {
         result.push(new musicScore(
             names[i],
             levels[i],
