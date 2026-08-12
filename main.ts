@@ -1,5 +1,7 @@
 import axios from "axios";
 import https from "https";
+import os from "os";
+import { createHash } from "crypto";
 import { JSDOM } from 'jsdom';
 import { musicScore, maiScore, musicDifficulty } from './class'
 
@@ -47,8 +49,6 @@ function sleep(ms: number) {
 }
 
 function buildToken() { // Cookie '_t'
-    let os = require('os');
-    let { createHash } = require('crypto');
     let date = new Date();
     let machineId = createHash('md5')
         .update(os.hostname() + os.totalmem() + os.homedir() + date.getUTCFullYear() + 'Kalium')
