@@ -56,7 +56,7 @@ function buildToken() { // Cookie '_t'
     return machineId;
 }
 
-async function refreshIdJp(segaId: string, passwd: string) {
+export async function refreshIdJp(segaId: string, passwd: string) {
     let token = buildToken();
     let aimeId = '0';
     // Step 1-1: Login DX Net
@@ -245,4 +245,41 @@ function getMusicScore(htmlData: string, diff: musicDifficulty): musicScore[]
 
     return result;
 
+}
+
+// Get Account Name From DX Net Home Page
+export async function maiInfoJp(segaId: string, passwd: string): Promise<string> {
+    let userId = await refreshIdJp(segaId, passwd);
+    let homePage = await axios({
+        method: 'get',
+        url: 'https://maimaidx.jp/maimai-mobile/home/',
+        headers: {
+            'Accept': headerAcceptPost,
+            'Accept-Language': headerAcceptLanguage,
+            'Connection': headerConnection,
+            'Cookie': '_t=' + buildToken() + '; userId=' + userId,
+            'DNT': headerDNT,
+            'Referer': headerAimeJp,
+            'Sec-Fetch-Dest': headerSFDest,
+            'Sec-Fetch-Mode': headerSFMode,
+            'Sec-Fetch-Site': headerSFSiteNone,
+            'Sec-Fetch-User': headerSFUser,
+            'Upgrade-Insecure-Requests': headerUpgradeInsecureRequests,
+            'sec-ch-ua': headerSCU,
+            'sec-ch-ua-mobile': headerSCUMobile,
+            'sec-ch-ua-platform': headerSCUPlatform,
+            'User-Agent': headerUA
+        },
+        httpsAgent: agent
+    }).then(response => {
+        return response.data;
+    }).catch(error => {
+        console.error('Error:', error);
+    }) as string;
+
+    let nameMatch = homePage.match(/<div class="name_block f_l f_16">(.*?)<\/div>/);
+    if (!nameMatch) {
+        throw new Error('Cannot find name block in home page');
+    }
+    return nameMatch[1].trim();
 }
